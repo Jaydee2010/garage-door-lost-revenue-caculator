@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missed Call Revenue Calculator</title>
+<style>
+  :root {
+    --bg: #111;
+    --card: #1a1a1a;
+    --orange: #ff6b35;
+    --orange-dim: rgba(255,107,53,0.55);
+    --text-dim: #aaa;
+    --border: #2a2a2a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 440px;
+  }
+  .currency-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .currency-row select {
+    background: var(--card);
+    color: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .progress .seg {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .progress .seg.done { background: var(--orange); }
+  .progress .seg.active { background: linear-gradient(90deg, var(--orange) 50%, var(--border) 50%); }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.35s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .eyebrow {
+    color: var(--orange);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 22px;
+    line-height: 1.35;
+    margin: 0 0 8px;
+  }
+  .helper {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin: 0 0 28px;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: #fff;
+    font-size: 22px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    outline: none;
+  }
+  input[type="number"]:focus { border-color: var(--orange); }
+
+  .slider-row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 16px 16px;
+  }
+  .slider-value {
+    font-size: 30px;
+    font-weight: bold;
+    color: var(--orange);
+    margin-bottom: 12px;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--orange);
+  }
+
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+  }
+  .btn {
+    border: none;
+    border-radius: 999px;
+    font-weight: bold;
+    font-size: 15px;
+    padding: 13px 26px;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: #fff;
+  }
+  .btn-primary:disabled {
+    background: #4a3a30;
+    color: #888;
+    cursor: not-allowed;
+  }
+  .btn-back {
+    background: none;
+    color: var(--text-dim);
+    padding: 13px 10px;
+  }
+
+  /* Results screen */
+  #results { text-align: center; }
+  .result-label {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .result-amount {
+    font-size: 52px;
+    font-weight: bold;
+    color: var(--orange);
+    margin: 4px 0 6px;
+    letter-spacing: -1px;
+  }
+  .result-sub {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+  .result-line {
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 30px;
+  }
+  .cta-note {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: var(--orange);
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 16px 30px;
+    border-radius: 999px;
+    box-shadow: 0 4px 18px rgba(255,107,53,0.45);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 var(--orange-dim); }
+    70%  { box-shadow: 0 0 0 16px rgba(255,107,53,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,107,53,0); }
+  }
+  .restart {
+    display: block;
+    margin-top: 20px;
+    color: var(--text-dim);
+    font-size: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="currency-row">
+    <label for="currency">Currency:</label>
+    <select id="currency">
+      <option value="$">$ USD</option>
+      <option value="£">£ GBP</option>
+      <option value="€">€ EUR</option>
+      <option value="₦">₦ NGN</option>
+      <option value="C$">C$ CAD</option>
+      <option value="A$">A$ AUD</option>
+      <option value="R">R ZAR</option>
+      <option value="₹">₹ INR</option>
+    </select>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <!-- Q1 -->
+  <div class="screen active" data-step="0">
+    <div class="eyebrow">Question 1 of 5</div>
+    <h1>How many inbound calls does your business get in a typical month?</h1>
+    <p class="helper">Include everything — emergencies, quotes, follow-ups.</p>
+    <input type="number" id="q1" placeholder="e.g. 120" min="0">
+  </div>
+
+  <!-- Q2 -->
+  <div class="screen" data-step="1">
+    <div class="eyebrow">Question 2 of 5</div>
+    <h1>What % of those calls go unanswered or straight to voicemail?</h1>
+    <p class="helper">Most garage door companies land between 30–60%. Best guess is fine.</p>
+    <div class="slider-row">
+      <div class="slider-value"><span id="q2-val">40</span>%</div>
+      <input type="range" id="q2" min="0" max="100" value="40">
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="screen" data-step="2">
+    <div class="eyebrow">Question 3 of 5</div>
+    <h1>What's your average revenue per completed job?</h1>
+    <p class="helper">Typical spring replacement, opener repair, or service call.</p>
+    <input type="number" id="q3" placeholder="e.g. 300" min="0">
+  </div>
+
+  <!-- Q4 -->
+  <div class="screen" data-step="3">
+    <div class="eyebrow">Question 4 of 5</div>
+    <h1>Of the calls you DO answer, what % turn into a booked, paid job?</h1>
+    <p class="helper">Your normal close rate on live calls.</p>
+    <div class="slider-row">
+      <div class="slider-value"><span id="q4-val">50</span>%</div>
+      <input type="range" id="q4" min="0" max="100" value="50">
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="screen" data-step="4">
+    <div class="eyebrow">Question 5 of 5</div>
+    <h1>What % of your total calls are true emergencies?</h1>
+    <p class="helper">Broken spring, off-track, car trapped, after-hours — these convert highest and get missed most.</p>
+    <div class="slider-row">
+      <div class="slider-value"><span id="q5-val">25</span>%</div>
+      <input type="range" id="q5" min="0" max="100" value="25">
+    </div>
+  </div>
+
+  <div class="nav" id="nav">
+    <button class="btn btn-back" id="backBtn">Back</button>
+    <button class="btn btn-primary" id="nextBtn" disabled>Next</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="result-label">You're likely losing</div>
+    <div class="result-amount" id="resultAmount">$0</div>
+    <div class="result-sub">every month, gone before you even knew the phone rang</div>
+    <p class="result-line">That's every caller who heard a ring, got no answer,<br>and dialed the next name on Google instead.</p>
+    <a href="https://garage-door-ai.vercel.app/" class="cta-btn" id="ctaBtn">See What Stops This</a>
+    <div class="cta-note">Takes 60 seconds</div>
+    <button class="restart" id="restartBtn">Recalculate</button>
+  </div>
+
+</div>
+
+<script>
+  var steps = document.querySelectorAll('.screen');
+  var progressEl = document.getElementById('progress');
+  var nav = document.getElementById('nav');
+  var backBtn = document.getElementById('backBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var results = document.getElementById('results');
+  var current = 0;
+  var total = steps.length;
+
+  // build progress bar segments
+  for (var i = 0; i < total; i++) {
+    var seg = document.createElement('div');
+    seg.className = 'seg';
+    progressEl.appendChild(seg);
+  }
+  var segs = progressEl.querySelectorAll('.seg');
+
+  function updateProgress() {
+    segs.forEach(function (s, i) {
+      s.className = 'seg' + (i < current ? ' done' : i === current ? ' active' : '');
+    });
+  }
+
+  function isAnswered(step) {
+    if (step === 0) return document.getElementById('q1').value.trim() !== '';
+    if (step === 2) return document.getElementById('q3').value.trim() !== '';
+    return true; // sliders always have a value
+  }
+
+  function refreshNextState() {
+    nextBtn.disabled = !isAnswered(current);
+  }
+
+  function showStep(i) {
+    steps.forEach(function (s) {
+      s.classList.toggle('active', parseInt(s.dataset.step) === i);
+    });
+    backBtn.style.visibility = i === 0 ? 'hidden' : 'visible';
+    nextBtn.textContent = i === total - 1 ? 'See My Number' : 'Next';
+    updateProgress();
+    refreshNextState();
+  }
+
+  document.getElementById('q1').addEventListener('input', refreshNextState);
+  document.getElementById('q3').addEventListener('input', refreshNextState);
+
+  ['q2', 'q4', 'q5'].forEach(function (id) {
+    var input = document.getElementById(id);
+    var label = document.getElementById(id + '-val');
+    input.addEventListener('input', function () { label.textContent = input.value; });
+  });
+
+  backBtn.addEventListener('click', function () {
+    if (current > 0) { current--; showStep(current); }
+  });
+
+  nextBtn.addEventListener('click', function () {
+    if (nextBtn.disabled) return;
+    if (current < total - 1) {
+      current++;
+      showStep(current);
+    } else {
+      calculateAndReveal();
+    }
+  });
+
+  function calculateAndReveal() {
+    var q1 = parseFloat(document.getElementById('q1').value) || 0;
+    var q2 = parseFloat(document.getElementById('q2').value) || 0;
+    var q3 = parseFloat(document.getElementById('q3').value) || 0;
+    var q4 = parseFloat(document.getElementById('q4').value) || 0;
+    var q5 = parseFloat(document.getElementById('q5').value) || 0;
+
+    var missedCalls = q1 * (q2 / 100);
+    var emergencyMissed = missedCalls * (q5 / 100);
+    var routineMissed = missedCalls * (1 - q5 / 100);
+    var recoverableJobs = (emergencyMissed * (q4 / 100) * 1.5) + (routineMissed * (q4 / 100));
+    var monthlyLoss = recoverableJobs * q3;
+
+    // hide question UI, show results
+    steps.forEach(function (s) { s.classList.remove('active'); });
+    nav.style.display = 'none';
+    progressEl.style.display = 'none';
+    results.style.display = 'block';
+
+    animateCount(Math.round(monthlyLoss));
+  }
+
+  function animateCount(target) {
+    var el = document.getElementById('resultAmount');
+    var ctaBtn = document.getElementById('ctaBtn');
+    var currency = document.getElementById('currency').value;
+    var start = 0;
+    var duration = 1100;
+    var startTime = null;
+
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      var progress = Math.min((ts - startTime) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var value = Math.round(start + (target - start) * eased);
+      el.textContent = currency + value.toLocaleString();
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        ctaBtn.textContent = "Stop Losing " + currency + target.toLocaleString() + " a Month";
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  document.getElementById('restartBtn').addEventListener('click', function () {
+    document.getElementById('q1').value = '';
+    document.getElementById('q3').value = '';
+    document.getElementById('q2').value = 40; document.getElementById('q2-val').textContent = 40;
+    document.getElementById('q4').value = 50; document.getElementById('q4-val').textContent = 50;
+    document.getElementById('q5').value = 25; document.getElementById('q5-val').textContent = 25;
+    current = 0;
+    results.style.display = 'none';
+    nav.style.display = 'flex';
+    progressEl.style.display = 'flex';
+    showStep(0);
+  });
+
+  results.style.display = 'none';
+  showStep(0);
+</script>
+
+</body>
+</html>
