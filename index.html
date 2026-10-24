@@ -60,15 +60,15 @@
   }
   .progress .seg.done { background: var(--orange); }
   .progress .seg.active { background: linear-gradient(90deg, var(--orange) 50%, var(--border) 50%); }
-
+ 
   .screen { display: none; }
   .screen.active { display: block; animation: fadeIn 0.35s ease; }
-
+ 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateX(16px); }
     to   { opacity: 1; transform: translateX(0); }
   }
-
+ 
   .eyebrow {
     color: var(--orange);
     font-size: 12px;
@@ -87,7 +87,7 @@
     font-size: 13px;
     margin: 0 0 28px;
   }
-
+ 
   input[type="number"] {
     width: 100%;
     background: var(--card);
@@ -99,7 +99,7 @@
     outline: none;
   }
   input[type="number"]:focus { border-color: var(--orange); }
-
+ 
   .slider-row {
     background: var(--card);
     border: 1px solid var(--border);
@@ -116,7 +116,7 @@
     width: 100%;
     accent-color: var(--orange);
   }
-
+ 
   .nav {
     display: flex;
     justify-content: space-between;
@@ -145,7 +145,7 @@
     color: var(--text-dim);
     padding: 13px 10px;
   }
-
+ 
   /* Results screen */
   #results { text-align: center; }
   .result-label {
@@ -206,9 +206,9 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="wrap">
-
+ 
   <div class="currency-row">
     <label for="currency">Currency:</label>
     <select id="currency">
@@ -222,9 +222,9 @@
       <option value="₹">₹ INR</option>
     </select>
   </div>
-
+ 
   <div class="progress" id="progress"></div>
-
+ 
   <!-- Q1 -->
   <div class="screen active" data-step="0">
     <div class="eyebrow">Question 1 of 5</div>
@@ -232,7 +232,7 @@
     <p class="helper">Include everything — emergencies, quotes, follow-ups.</p>
     <input type="number" id="q1" placeholder="e.g. 120" min="0">
   </div>
-
+ 
   <!-- Q2 -->
   <div class="screen" data-step="1">
     <div class="eyebrow">Question 2 of 5</div>
@@ -243,7 +243,7 @@
       <input type="range" id="q2" min="0" max="100" value="40">
     </div>
   </div>
-
+ 
   <!-- Q3 -->
   <div class="screen" data-step="2">
     <div class="eyebrow">Question 3 of 5</div>
@@ -251,7 +251,7 @@
     <p class="helper">Typical spring replacement, opener repair, or service call.</p>
     <input type="number" id="q3" placeholder="e.g. 300" min="0">
   </div>
-
+ 
   <!-- Q4 -->
   <div class="screen" data-step="3">
     <div class="eyebrow">Question 4 of 5</div>
@@ -262,7 +262,7 @@
       <input type="range" id="q4" min="0" max="100" value="50">
     </div>
   </div>
-
+ 
   <!-- Q5 -->
   <div class="screen" data-step="4">
     <div class="eyebrow">Question 5 of 5</div>
@@ -273,25 +273,25 @@
       <input type="range" id="q5" min="0" max="100" value="25">
     </div>
   </div>
-
+ 
   <div class="nav" id="nav">
     <button class="btn btn-back" id="backBtn">Back</button>
     <button class="btn btn-primary" id="nextBtn" disabled>Next</button>
   </div>
-
+ 
   <!-- Results -->
   <div id="results">
     <div class="result-label">You're likely losing</div>
     <div class="result-amount" id="resultAmount">$0</div>
     <div class="result-sub">every month, gone before you even knew the phone rang</div>
     <p class="result-line">That's every caller who heard a ring, got no answer,<br>and dialed the next name on Google instead.</p>
-    <a href="https://garage-door-ai.vercel.app/" class="cta-btn" id="ctaBtn">See What Stops This</a>
+    <a href="https://stepstonevoiceagent.vercel.app/" class="cta-btn" id="ctaBtn">See What Stops This</a>
     <div class="cta-note">Takes 60 seconds</div>
     <button class="restart" id="restartBtn">Recalculate</button>
   </div>
-
+ 
 </div>
-
+ 
 <script>
   var steps = document.querySelectorAll('.screen');
   var progressEl = document.getElementById('progress');
@@ -301,7 +301,7 @@
   var results = document.getElementById('results');
   var current = 0;
   var total = steps.length;
-
+ 
   // build progress bar segments
   for (var i = 0; i < total; i++) {
     var seg = document.createElement('div');
@@ -309,23 +309,23 @@
     progressEl.appendChild(seg);
   }
   var segs = progressEl.querySelectorAll('.seg');
-
+ 
   function updateProgress() {
     segs.forEach(function (s, i) {
       s.className = 'seg' + (i < current ? ' done' : i === current ? ' active' : '');
     });
   }
-
+ 
   function isAnswered(step) {
     if (step === 0) return document.getElementById('q1').value.trim() !== '';
     if (step === 2) return document.getElementById('q3').value.trim() !== '';
     return true; // sliders always have a value
   }
-
+ 
   function refreshNextState() {
     nextBtn.disabled = !isAnswered(current);
   }
-
+ 
   function showStep(i) {
     steps.forEach(function (s) {
       s.classList.toggle('active', parseInt(s.dataset.step) === i);
@@ -335,20 +335,20 @@
     updateProgress();
     refreshNextState();
   }
-
+ 
   document.getElementById('q1').addEventListener('input', refreshNextState);
   document.getElementById('q3').addEventListener('input', refreshNextState);
-
+ 
   ['q2', 'q4', 'q5'].forEach(function (id) {
     var input = document.getElementById(id);
     var label = document.getElementById(id + '-val');
     input.addEventListener('input', function () { label.textContent = input.value; });
   });
-
+ 
   backBtn.addEventListener('click', function () {
     if (current > 0) { current--; showStep(current); }
   });
-
+ 
   nextBtn.addEventListener('click', function () {
     if (nextBtn.disabled) return;
     if (current < total - 1) {
@@ -358,29 +358,29 @@
       calculateAndReveal();
     }
   });
-
+ 
   function calculateAndReveal() {
     var q1 = parseFloat(document.getElementById('q1').value) || 0;
     var q2 = parseFloat(document.getElementById('q2').value) || 0;
     var q3 = parseFloat(document.getElementById('q3').value) || 0;
     var q4 = parseFloat(document.getElementById('q4').value) || 0;
     var q5 = parseFloat(document.getElementById('q5').value) || 0;
-
+ 
     var missedCalls = q1 * (q2 / 100);
     var emergencyMissed = missedCalls * (q5 / 100);
     var routineMissed = missedCalls * (1 - q5 / 100);
     var recoverableJobs = (emergencyMissed * (q4 / 100) * 1.5) + (routineMissed * (q4 / 100));
     var monthlyLoss = recoverableJobs * q3;
-
+ 
     // hide question UI, show results
     steps.forEach(function (s) { s.classList.remove('active'); });
     nav.style.display = 'none';
     progressEl.style.display = 'none';
     results.style.display = 'block';
-
+ 
     animateCount(Math.round(monthlyLoss));
   }
-
+ 
   function animateCount(target) {
     var el = document.getElementById('resultAmount');
     var ctaBtn = document.getElementById('ctaBtn');
@@ -388,7 +388,7 @@
     var start = 0;
     var duration = 1100;
     var startTime = null;
-
+ 
     function step(ts) {
       if (!startTime) startTime = ts;
       var progress = Math.min((ts - startTime) / duration, 1);
@@ -403,7 +403,7 @@
     }
     requestAnimationFrame(step);
   }
-
+ 
   document.getElementById('restartBtn').addEventListener('click', function () {
     document.getElementById('q1').value = '';
     document.getElementById('q3').value = '';
@@ -416,10 +416,10 @@
     progressEl.style.display = 'flex';
     showStep(0);
   });
-
+ 
   results.style.display = 'none';
   showStep(0);
 </script>
-
+ 
 </body>
 </html>
